@@ -5,7 +5,7 @@
 
 var net = require('net'),
     port = 5000,
-    unixsocket = '/tmp/echo1.sock';
+    unixsocket = '/tmp/echo2.sock';
 
 var log = function(who, what) {
   return function() {
@@ -13,6 +13,8 @@ var log = function(who, what) {
     console.log('[%s on %s]', who, what, args);
   };
 };
+
+var clients = [];
 
 var echo = function(socket) {
   /**
@@ -61,13 +63,23 @@ server.on('listening', function() {
 });
 
 server.on('connection', function(socket) {
-  socket.write('some string');
+  broadcast('Someone joined the party');
+  clients.push(socket);
 
 
   server.getConnections(function(err, count) {
     console.log('%d open connections!', count);
   });
 });
+
+function broadcast(message) {
+  clients.forEach(function (client) {
+     // Don't want to send it to sender
+     //if (client === sender) return;
+     client.write(message);
+   });
+
+}
 
 server.on('close', function() { console.log('[server on close]'); });
 server.on('err', function(err) {
